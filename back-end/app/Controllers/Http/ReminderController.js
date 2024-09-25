@@ -22,8 +22,8 @@ class ReminderController
     
     async store({ request, response }) 
     {
-      const { user_id, title, description, timetable } = request.all();
-      const reminder = await this.Reminder.create({ user_id, title, description, timetable });
+      const { title, description, observations, timetable } = request.all();
+      const reminder = await this.Reminder.create({ title, description, observations, timetable });
       return response.status(201).json(reminder);
     }
   

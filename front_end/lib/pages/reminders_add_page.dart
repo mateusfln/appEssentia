@@ -1,4 +1,9 @@
+import 'dart:convert';
+import 'package:front_end/pages/reminders_page.dart';
+import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+
 
 class RemindersAddPage extends StatefulWidget {
   final String? reminder;
@@ -23,7 +28,57 @@ class _RemindersAddPageState extends State<RemindersAddPage> {
     }
   }
 
-  Future<void> _selectTime(BuildContext context) async {
+  Future<void> _sendReminder() async {
+    String title = _titleController.text;
+    String details = _detailsController.text;
+    String observations = _observationsController.text;
+    TimeOfDay selectedTime = TimeOfDay.fromDateTime(DateTime.now());
+    DateTime now = DateTime.now();
+    // DateTime alarmDateTime = DateTime(
+    //   now.year,
+    //   now.month,
+    //   now.day,
+    //   selectedTime.hour,
+    //   selectedTime.minute,
+    // );
+
+    DateTime alarmDateTime = _selectedTime != null
+      ? DateTime(now.year, now.month, now.day, _selectedTime!.hour, _selectedTime!.minute)
+      : DateTime(now.year, now.month, now.day, now.hour, now.minute);
+
+
+    // Formata o DateTime para o formato desejado
+    String alarmTime = DateFormat('yyyy-MM-dd HH:mm:ss').format(alarmDateTime);
+
+    final Map<String, dynamic> data = {
+      'title': title,
+      'description': details,
+      'observations': observations,
+      'timetable': alarmTime,
+    };
+    final response = await http.post(
+      Uri.parse('http://localhost:3333/api/v1/reminders'), // Substitua pela sua URL
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode(data),
+    );
+
+    if (response.statusCode == 201) {
+      // Lembrete criado com sucesso
+      Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => RemindersPage()),
+    );
+    } else {
+      // Trate o erro conforme necessário
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Falha ao criar lembrete')),
+      );
+    }
+  }
+
+   Future<void> _selectTime(BuildContext context) async {
     final TimeOfDay? picked = await showTimePicker(
       context: context,
       initialTime: TimeOfDay.now(),
@@ -87,18 +142,7 @@ class _RemindersAddPageState extends State<RemindersAddPage> {
             ),
             SizedBox(height: 20),
             ElevatedButton(
-              onPressed: () {
-                String title = _titleController.text;
-                String details = _detailsController.text;
-                String observations = _observationsController.text;
-                String alarmTime = _selectedTime != null ? _selectedTime!.format(context) : 'Sem horário';
-                
-                print('Título: $title');
-                print('Detalhes: $details');
-                print('Horário do Alarme: $alarmTime');
-                print('Observações: $observations');
-                Navigator.pop(context);
-              },
+              onPressed: _sendReminder,
               child: Text('Salvar Lembrete'),
             ),
           ],

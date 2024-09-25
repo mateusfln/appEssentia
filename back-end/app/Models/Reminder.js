@@ -5,14 +5,14 @@ const Model = use('Model')
 
 class Reminder extends Model
 {
- /**
-   * @method users
-   *
-   * @return {Object}
-   */
-  users () {
-    return this.hasOne('App/Models/User')
-  }
+//  /**
+//    * @method users
+//    *
+//    * @return {Object}
+//    */
+//   users () {
+//     return this.hasOne('App/Models/User')
+//   }
 }
 
 module.exports = Reminder

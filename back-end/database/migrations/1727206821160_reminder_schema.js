@@ -7,9 +7,10 @@ class ReminderSchema extends Schema {
   up () {
     this.create('reminders', (table) => {
       table.increments()
-      table.integer('user_id').notNullable().unsigned().references('users.id').onDelete('CASCADE')
+      // table.integer('user_id').notNullable().unsigned().references('users.id').onDelete('CASCADE')
       table.string('title').notNullable()
       table.string('description').notNullable()
+      table.string('observations').notNullable()
       table.datetime('timetable').notNullable()
       table.timestamps()
     })

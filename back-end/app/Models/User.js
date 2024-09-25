@@ -30,14 +30,14 @@ class User extends Model {
     return this.hasMany('App/Models/Token')
   }
 
-  /**
-   * @method reminders
-   *
-   * @return {Object}
-   */
-  reminders () {
-    return this.hasMany('App/Models/Reminder')
-  }
+  // /**
+  //  * @method reminders
+  //  *
+  //  * @return {Object}
+  //  */
+  // reminders () {
+  //   return this.hasMany('App/Models/Reminder')
+  // }
 }
 
 module.exports = User
