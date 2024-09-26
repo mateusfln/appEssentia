@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:front_end/pages/articles_page.dart';
 import 'package:front_end/pages/budget_page.dart';
-import 'package:front_end/pages/contact_page.dart';
+import 'package:front_end/pages/home.dart';
 import 'package:front_end/pages/messages_page.dart';
 import 'package:front_end/pages/reminders_page.dart';
 import 'package:front_end/pages/profile_page.dart';
@@ -26,7 +26,7 @@ class AppMenuDrawer extends StatelessWidget {
         _itemDrawer(context, Icon(Icons.access_time), 'Lembretes', RemindersPage()),
         _itemDrawer(context, Icon(Icons.attach_money), 'Orçamentos', BudgetPage()),
         _itemDrawer(context, Icon(Icons.chat), 'Mensagens', MessagesPage()),
-        _itemDrawer(context, Icon(Icons.contact_mail), 'Contato', ContactPage()),
+        _itemDrawer(context, Icon(Icons.contact_mail), 'Contato', Home()),
         _itemDrawer(context, Icon(Icons.person), 'Perfil', ProfilePage()),
       ],
     );

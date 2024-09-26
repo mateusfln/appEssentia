@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:front_end/pages/home.dart';
 
 class Splash extends StatefulWidget {
@@ -17,16 +16,14 @@ class _SplashState extends State<Splash> {
     super.initState();
 
     Future.delayed(Duration(seconds: 3)).then((_) {
-    Navigator.pushReplacement(context, MaterialPageRoute(
-          builder: (context) => Home()
-      ));
+      Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => Home()));
     });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        body: Container(
+      body: Container(
       width: double.maxFinite,
       height: double.maxFinite,
       color: Colors.black,

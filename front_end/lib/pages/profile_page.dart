@@ -1,19 +1,5 @@
-import 'package:flutter/material.dart';
+import 'package:front_end/pages/default_page.dart';
 
-class ProfilePage extends StatelessWidget {
-  const ProfilePage({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Profile Page'),
-        iconTheme: IconThemeData(color: Colors.white),
-        backgroundColor: Color.fromRGBO(21, 21, 21, 1),
-      ),
-      body: Center(
-        child: Text('Profile Page'),
-      ),
-    );
-  }
+class ProfilePage extends DefaultPage {
+  const ProfilePage({super.key}): super(pageTitle: 'Profile Page');
 }

@@ -7,8 +7,12 @@ import 'package:intl/intl.dart';
 
 class RemindersAddPage extends StatefulWidget {
   final String? reminder;
+  final String? details;
+  final String? observations;
+  final TimeOfDay? time;
+  final String? reminderId;
 
-  const RemindersAddPage({super.key, this.reminder});
+  const RemindersAddPage({super.key, this.reminder, this.details, this.observations, this.time, this.reminderId});
 
   @override
   _RemindersAddPageState createState() => _RemindersAddPageState();
@@ -24,7 +28,10 @@ class _RemindersAddPageState extends State<RemindersAddPage> {
   void initState() {
     super.initState();
     if (widget.reminder != null) {
-      _titleController.text = widget.reminder!; // Preenche o título se for edição
+    _titleController.text = widget.reminder!;
+    _detailsController.text = widget.details ?? '';
+    _observationsController.text = widget.observations ?? '';
+    _selectedTime = widget.time;
     }
   }
 
@@ -34,20 +41,12 @@ class _RemindersAddPageState extends State<RemindersAddPage> {
     String observations = _observationsController.text;
     TimeOfDay selectedTime = TimeOfDay.fromDateTime(DateTime.now());
     DateTime now = DateTime.now();
-    // DateTime alarmDateTime = DateTime(
-    //   now.year,
-    //   now.month,
-    //   now.day,
-    //   selectedTime.hour,
-    //   selectedTime.minute,
-    // );
 
     DateTime alarmDateTime = _selectedTime != null
-      ? DateTime(now.year, now.month, now.day, _selectedTime!.hour, _selectedTime!.minute)
-      : DateTime(now.year, now.month, now.day, now.hour, now.minute);
+        ? DateTime(now.year, now.month, now.day, _selectedTime!.hour,
+            _selectedTime!.minute)
+        : DateTime(now.year, now.month, now.day, now.hour, now.minute);
 
-
-    // Formata o DateTime para o formato desejado
     String alarmTime = DateFormat('yyyy-MM-dd HH:mm:ss').format(alarmDateTime);
 
     final Map<String, dynamic> data = {
@@ -56,39 +55,37 @@ class _RemindersAddPageState extends State<RemindersAddPage> {
       'observations': observations,
       'timetable': alarmTime,
     };
-    final response = await http.post(
-      Uri.parse('http://localhost:3333/api/v1/reminders'), // Substitua pela sua URL
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: jsonEncode(data),
-    );
 
-    if (response.statusCode == 201) {
-      // Lembrete criado com sucesso
-      Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (context) => RemindersPage()),
-    );
+    final Uri url = widget.reminderId != null
+        ? Uri.parse('http://localhost:3333/api/v1/reminders/${widget.reminderId}')
+        : Uri.parse('http://localhost:3333/api/v1/reminders');
+
+    final response = await (widget.reminderId != null
+        ? http.put(url,
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode(data))
+        : http.post(url,
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode(data)));
+
+    if (response.statusCode == (widget.reminderId != null ? 200 : 201)) {
+      Navigator.push(context, MaterialPageRoute(builder: (context) => RemindersPage()));
     } else {
-      // Trate o erro conforme necessário
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Falha ao criar lembrete')),
-      );
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Falha ao salvar lembrete')));
     }
   }
 
    Future<void> _selectTime(BuildContext context) async {
-    final TimeOfDay? picked = await showTimePicker(
-      context: context,
-      initialTime: TimeOfDay.now(),
-    );
-    if (picked != null && picked != _selectedTime) {
-      setState(() {
-        _selectedTime = picked;
-      });
+      final TimeOfDay? picked = await showTimePicker(
+        context: context,
+        initialTime: TimeOfDay.now(),
+      );
+      if (picked != null && picked != _selectedTime) {
+        setState(() {
+          _selectedTime = picked;
+        });
+      }
     }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -104,6 +101,7 @@ class _RemindersAddPageState extends State<RemindersAddPage> {
           children: [
             TextField(
               controller: _titleController,
+              maxLength: 45,
               decoration: InputDecoration(
                 labelText: 'Título',
                 border: OutlineInputBorder(),
@@ -112,6 +110,7 @@ class _RemindersAddPageState extends State<RemindersAddPage> {
             SizedBox(height: 16),
             TextField(
               controller: _detailsController,
+              maxLength: 255,
               decoration: InputDecoration(
                 labelText: 'Detalhes',
                 border: OutlineInputBorder(),
@@ -123,10 +122,12 @@ class _RemindersAddPageState extends State<RemindersAddPage> {
               onTap: () => _selectTime(context),
               child: AbsorbPointer(
                 child: TextField(
+                  readOnly: true,
                   decoration: InputDecoration(
                     //labelText: 'Horário do Alarme',
                     border: OutlineInputBorder(),
                     hintText: _selectedTime != null ? _selectedTime!.format(context) : 'Selecione um horário',
+                    prefixIcon: Icon(Icons.access_time),
                   ),
                 ),
               ),
@@ -134,6 +135,7 @@ class _RemindersAddPageState extends State<RemindersAddPage> {
             SizedBox(height: 16),
             TextField(
               controller: _observationsController,
+              maxLength: 255,
               decoration: InputDecoration(
                 labelText: 'Observações',
                 border: OutlineInputBorder(),
@@ -142,9 +144,18 @@ class _RemindersAddPageState extends State<RemindersAddPage> {
             ),
             SizedBox(height: 20),
             ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                padding: EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+                backgroundColor: Colors.grey[800],
+                shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+                ),
+                foregroundColor: Colors.white
+              ),
               onPressed: _sendReminder,
               child: Text('Salvar Lembrete'),
             ),
+
           ],
         ),
       ),

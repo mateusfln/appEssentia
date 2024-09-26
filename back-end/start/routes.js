@@ -18,18 +18,18 @@ const Route = use('Route')
 
 Route.get('/', () => {return { greeting: 'Hello world in JSON' }})
 
-Route.group(() => {
-    Route.get('/', 'ReminderController.index');
-    Route.post('/', 'ReminderController.store');
-    Route.get('/:id', 'ReminderController.show');
-    Route.put('/:id', 'ReminderController.update');
-    Route.delete('/:id', 'ReminderController.destroy');
-}).prefix('api/v1/reminders');
+const defineRestfulRoutes = (resource) => {
+    const resourceName = resource.toLowerCase();
+    const controllerName = `${resource}Controller`;
 
-Route.group(() => {
-    Route.get('/', 'UserController.index');
-    Route.post('/', 'UserController.store');
-    Route.get('/:id', 'UserController.show');
-    Route.put('/:id', 'UserController.update');
-    Route.delete('/:id', 'UserController.destroy');
-}).prefix('api/v1/users');
+    Route.group(() => {
+        Route.get('/', `${controllerName}.index`).as(`${resourceName}.index`);
+        Route.post('/', `${controllerName}.store`).as(`${resourceName}.store`);
+        Route.get('/:id', `${controllerName}.show`).as(`${resourceName}.show`);
+        Route.put('/:id', `${controllerName}.update`).as(`${resourceName}.update`);
+        Route.delete('/:id', `${controllerName}.destroy`).as(`${resourceName}.destroy`);
+    }).prefix(`api/v1/${resourceName}s`);
+};
+
+defineRestfulRoutes('Reminder');
+defineRestfulRoutes('User');

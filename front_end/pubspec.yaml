@@ -1,7 +1,7 @@
 name: front_end
 description: "A new Flutter project."
 publish_to: 'none'
-version: 0.1.0
+version: 1.0.0
 
 environment:
   sdk: ^3.5.3
@@ -10,10 +10,11 @@ dependencies:
   flutter:
     sdk: flutter
   carousel_slider: ^5.0.0
-  url_launcher: ^6.3.0
+  url_launcher: ^6.1.7
+  permission_handler: ^11.3.1
   http: ^1.2.2
   intl: ^0.19.0
-
+  
 dev_dependencies:
   flutter_test:
     sdk: flutter

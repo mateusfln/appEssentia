@@ -3,11 +3,14 @@
 import 'package:flutter/material.dart';
 import 'package:carousel_slider/carousel_slider.dart'
     as carousel;
+import 'package:front_end/pages/default_page.dart';
 import 'package:front_end/widgets/app_menu_drawer.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:permission_handler/permission_handler.dart';
 
-class Home extends StatelessWidget {
-  Home({super.key});
+
+class Home extends DefaultPage {
+  Home({super.key}): super(pageTitle: 'App Essentia');
 
   final List<String> imgList = [
     'assets/images/imagem-1-CarouselEssentia.png',
@@ -94,14 +97,22 @@ class Home extends StatelessWidget {
                   Expanded(
                     child: ElevatedButton(
                       onPressed: () async {
-                        final Uri launchUri = Uri(
+                        final Uri call = Uri(
                           scheme: 'tel',
-                          path: phoneNumber,
-                        );
-                        if (await canLaunchUrl(launchUri)) {
-                          launchUrl(launchUri);
+                          path: "99364921507"
+                          );
+                        
+                        // Verificar permissão de chamada
+                        var status = await Permission.phone.status;
+                        if (status.isGranted) {
+                          if (await canLaunchUrl(call)) {
+                            await launchUrl(call);
+                          } else {
+                            throw "Could not launch $call";
+                          }
                         } else {
-                          throw 'Could not launch $launchUri';
+                          // Se a permissão não foi concedida
+                          throw "Phone permission not granted";
                         }
                       },
                       child: Row(
@@ -166,7 +177,7 @@ class Home extends StatelessWidget {
                 children: [
                   ListTile(
                     title: Text('Endereço:'),
-                    subtitle: Text('Rua Exemplo, 123'),
+                    subtitle: Text('Av. Guilherme Scharf, 161 - Grande Florianópolis'),
                     leading: IconTheme(
                       child: Icon(Icons.home_work_outlined),
                       data: IconThemeData(color: Colors.black),
@@ -190,7 +201,7 @@ class Home extends StatelessWidget {
                   ),
                   ListTile(
                     title: Text('Email:'),
-                    subtitle: Text('exemplo@email.com'),
+                    subtitle: Text('atendimentoespecial@essentia.com.br'),
                     leading: IconTheme(
                       child: Icon(Icons.mail_sharp),
                       data: IconThemeData(color: Colors.black),
