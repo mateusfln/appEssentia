@@ -37,15 +37,14 @@ class _RemindersPageState extends State<RemindersPage> {
     }
   }
 
-  Future<void> _deleteReminder(String id) async {
+  Future<void> _deleteReminder(String id, index) async {
     final response = await http
         .delete(Uri.parse('http://localhost:3333/api/v1/reminders/$id'));
     print(response.statusCode);
     if (response.statusCode ==  204) {
-      Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (context) => RemindersPage()),
-    );
+    setState(() {
+      reminders.removeAt(index);
+    });
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Falha ao excluir lembrete')),
@@ -155,10 +154,7 @@ class _RemindersPageState extends State<RemindersPage> {
                                     context, name, id);
                               },
                               onDismissed: (direction) {
-                                _deleteReminder(reminder['id'].toString());
-                                setState(() {
-                                  reminders.removeAt(index);
-                                });
+                                _deleteReminder(reminder['id'].toString(), index);
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   SnackBar(content: Text('Lembrete excluído')),
                                 );
