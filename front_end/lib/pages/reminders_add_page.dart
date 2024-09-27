@@ -4,6 +4,8 @@ import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:timezone/data/latest.dart' as tz;
+import 'package:timezone/timezone.dart' as tz;
 
 class RemindersAddPage extends StatefulWidget {
   final String? reminder;
@@ -28,6 +30,7 @@ class _RemindersAddPageState extends State<RemindersAddPage> {
   @override
   void initState() {
     super.initState();
+    tz.initializeTimeZones();
     if (widget.reminder != null) {
       _titleController.text = widget.reminder!;
       _detailsController.text = widget.details ?? '';
@@ -40,15 +43,13 @@ class _RemindersAddPageState extends State<RemindersAddPage> {
     String title = _titleController.text;
     String details = _detailsController.text;
     String observations = _observationsController.text;
-    TimeOfDay selectedTime = TimeOfDay.fromDateTime(DateTime.now());
     DateTime now = DateTime.now();
-
+    final saoPaulo = tz.getLocation('America/Sao_Paulo');
     DateTime alarmDateTime = _selectedTime != null
-        ? DateTime(now.year, now.month, now.day, _selectedTime!.hour, _selectedTime!.minute)
-        : DateTime(now.year, now.month, now.day, now.hour, now.minute);
+        ? tz.TZDateTime(saoPaulo, now.year, now.month, now.day, _selectedTime!.hour, _selectedTime!.minute)
+        : tz.TZDateTime(saoPaulo, now.year, now.month, now.day, now.hour, now.minute);
 
     String alarmTime = DateFormat('yyyy-MM-dd HH:mm:ss').format(alarmDateTime);
-
     final Map<String, dynamic> data = {
       'title': title,
       'description': details,
@@ -63,10 +64,10 @@ class _RemindersAddPageState extends State<RemindersAddPage> {
     final response = await (widget.reminderId != null
         ? http.put(url, headers: {'Content-Type': 'application/json'}, body: jsonEncode(data))
         : http.post(url, headers: {'Content-Type': 'application/json'}, body: jsonEncode(data)));
-
+    print(jsonEncode(data));
     if (response.statusCode == (widget.reminderId != null ? 200 : 201)) {
       if (widget.reminderId == null) {
-        widget.reminders.add(data); 
+        widget.reminders.add(data);
       } else {
         final index = widget.reminders.indexWhere((reminder) => reminder['id'] == widget.reminderId);
         widget.reminders[index] = data;
@@ -124,7 +125,7 @@ class _RemindersAddPageState extends State<RemindersAddPage> {
                 labelText: 'Detalhes',
                 border: OutlineInputBorder(),
               ),
-              maxLines: 3, // Permite múltiplas linhas
+              maxLines: 3,
             ),
             SizedBox(height: 16),
             GestureDetector(
@@ -148,7 +149,7 @@ class _RemindersAddPageState extends State<RemindersAddPage> {
                 labelText: 'Observações',
                 border: OutlineInputBorder(),
               ),
-              maxLines: 3, // Permite múltiplas linhas
+              maxLines: 3,
             ),
             SizedBox(height: 20),
             ElevatedButton(

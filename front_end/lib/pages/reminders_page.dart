@@ -5,6 +5,8 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:timezone/data/latest.dart' as tz;
+import 'package:timezone/timezone.dart' as tz;
 
 class RemindersPage extends StatefulWidget {
   const RemindersPage({super.key});
@@ -21,6 +23,7 @@ class _RemindersPageState extends State<RemindersPage> {
   @override
   void initState() {
     super.initState();
+    tz.initializeTimeZones();
     loadRemindersFromLocalStorage();
     fetchReminders();
   }
@@ -28,7 +31,7 @@ class _RemindersPageState extends State<RemindersPage> {
   Future<void> loadRemindersFromLocalStorage() async {
     final prefs = await SharedPreferences.getInstance();
     final String? remindersJson = prefs.getString('reminders');
-    
+
     if (remindersJson != null) {
       List<dynamic> loadedReminders = json.decode(remindersJson);
       setState(() {
@@ -56,8 +59,7 @@ class _RemindersPageState extends State<RemindersPage> {
   }
 
   Future<void> _deleteReminder(String id, int index) async {
-    final response = await http
-        .delete(Uri.parse('http://localhost:3333/api/v1/reminders/$id'));
+    final response = await http.delete(Uri.parse('http://localhost:3333/api/v1/reminders/$id'));
 
     if (response.statusCode == 204) {
       setState(() {
@@ -91,7 +93,7 @@ class _RemindersPageState extends State<RemindersPage> {
             ),
             TextButton(
               onPressed: () {
-                Navigator.of(context).pop(true); 
+                Navigator.of(context).pop(true);
               },
               child: Text('Excluir'),
             ),
@@ -106,6 +108,8 @@ class _RemindersPageState extends State<RemindersPage> {
     final filteredReminders = reminders
         .where((reminder) => reminder['title'].toLowerCase().contains(searchQuery.toLowerCase()))
         .toList();
+
+    final saoPaulo = tz.getLocation('America/Sao_Paulo');
 
     return Scaffold(
       drawer: Drawer(
@@ -203,7 +207,7 @@ class _RemindersPageState extends State<RemindersPage> {
                                             Icon(Icons.access_time, size: 16, color: Colors.black),
                                             SizedBox(width: 4),
                                             Text(
-                                              DateFormat.Hm().format(DateTime.parse(reminder['timetable'])),
+                                              DateFormat.Hm().format(tz.TZDateTime.parse(saoPaulo, reminder['timetable'])),
                                               style: TextStyle(fontSize: 14),
                                             ),
                                           ],
@@ -219,7 +223,7 @@ class _RemindersPageState extends State<RemindersPage> {
                                             reminder: reminder['title'].toString(),
                                             details: reminder['description'],
                                             observations: reminder['observations'],
-                                            time: TimeOfDay.fromDateTime(DateTime.parse(reminder['timetable'])),
+                                            time: TimeOfDay.fromDateTime(tz.TZDateTime.parse(saoPaulo, reminder['timetable'])),
                                             reminders: reminders,
                                           ),
                                         ),
