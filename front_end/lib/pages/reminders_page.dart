@@ -4,6 +4,7 @@ import 'package:front_end/widgets/app_menu_drawer.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:intl/intl.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class RemindersPage extends StatefulWidget {
   const RemindersPage({super.key});
@@ -20,7 +21,23 @@ class _RemindersPageState extends State<RemindersPage> {
   @override
   void initState() {
     super.initState();
+    loadRemindersFromLocalStorage();
     fetchReminders();
+  }
+
+  Future<void> loadRemindersFromLocalStorage() async {
+    final prefs = await SharedPreferences.getInstance();
+    final String? remindersJson = prefs.getString('reminders');
+    
+    if (remindersJson != null) {
+      List<dynamic> loadedReminders = json.decode(remindersJson);
+      setState(() {
+        reminders = List<Map<String, dynamic>>.from(loadedReminders);
+        isLoading = false;
+      });
+    } else {
+      isLoading = false;
+    }
   }
 
   Future<void> fetchReminders() async {
@@ -32,19 +49,21 @@ class _RemindersPageState extends State<RemindersPage> {
         reminders = List<Map<String, dynamic>>.from(data);
         isLoading = false;
       });
+      await saveRemindersToLocalStorage();
     } else {
       throw Exception('Falha ao carregar lembretes');
     }
   }
 
-  Future<void> _deleteReminder(String id, index) async {
+  Future<void> _deleteReminder(String id, int index) async {
     final response = await http
         .delete(Uri.parse('http://localhost:3333/api/v1/reminders/$id'));
-    print(response.statusCode);
-    if (response.statusCode ==  204) {
-    setState(() {
-      reminders.removeAt(index);
-    });
+
+    if (response.statusCode == 204) {
+      setState(() {
+        reminders.removeAt(index);
+      });
+      await saveRemindersToLocalStorage();
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Falha ao excluir lembrete')),
@@ -52,15 +71,19 @@ class _RemindersPageState extends State<RemindersPage> {
     }
   }
 
-  Future<bool?> _showDeleteConfirmationDialog(
-      BuildContext context, String name, id) {
+  Future<void> saveRemindersToLocalStorage() async {
+    final prefs = await SharedPreferences.getInstance();
+    String remindersJson = json.encode(reminders);
+    await prefs.setString('reminders', remindersJson);
+  }
+
+  Future<bool?> _showDeleteConfirmationDialog(BuildContext context, String name, id) {
     return showDialog<bool>(
       context: context,
       builder: (context) {
         return AlertDialog(
           title: Text('Confirmação de Exclusão'),
-          content: Text(
-              'Tem certeza de que deseja excluir o lembrete com o nome "$name"'),
+          content: Text('Tem certeza de que deseja excluir o lembrete com o nome "$name"'),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(false),
@@ -68,7 +91,7 @@ class _RemindersPageState extends State<RemindersPage> {
             ),
             TextButton(
               onPressed: () {
-              Navigator.of(context).pop(true); 
+                Navigator.of(context).pop(true); 
               },
               child: Text('Excluir'),
             ),
@@ -86,8 +109,8 @@ class _RemindersPageState extends State<RemindersPage> {
 
     return Scaffold(
       drawer: Drawer(
-          child: AppMenuDrawer(),
-        ),
+        child: AppMenuDrawer(),
+      ),
       appBar: AppBar(
         foregroundColor: Colors.white,
         title: Text('Lembretes'),
@@ -144,14 +167,12 @@ class _RemindersPageState extends State<RemindersPage> {
                                   children: [
                                     Icon(Icons.delete, color: Colors.white),
                                     SizedBox(width: 10),
-                                    Text("EXCLUIR",
-                                        style: TextStyle(color: Colors.white)),
+                                    Text("EXCLUIR", style: TextStyle(color: Colors.white)),
                                   ],
                                 ),
                               ),
                               confirmDismiss: (direction) async {
-                                return await _showDeleteConfirmationDialog(
-                                    context, name, id);
+                                return await _showDeleteConfirmationDialog(context, name, id);
                               },
                               onDismissed: (direction) {
                                 _deleteReminder(reminder['id'].toString(), index);
@@ -161,36 +182,28 @@ class _RemindersPageState extends State<RemindersPage> {
                               },
                               direction: DismissDirection.startToEnd,
                               child: Padding(
-                                padding: const EdgeInsets.symmetric(
-                                    vertical: 8.0, horizontal: 16.0),
+                                padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
                                 child: Card(
                                   elevation: 4,
                                   child: ListTile(
                                     title: Text(
                                       reminder['title'],
-                                      style: TextStyle(
-                                          fontSize: 20,
-                                          fontWeight: FontWeight.bold),
+                                      style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                                     ),
                                     subtitle: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
+                                      crossAxisAlignment: CrossAxisAlignment.start,
                                       children: [
                                         Text(
                                           reminder['description'],
-                                          style: TextStyle(
-                                              fontSize: 12, color: Colors.grey),
+                                          style: TextStyle(fontSize: 12, color: Colors.grey),
                                         ),
                                         SizedBox(height: 4),
                                         Row(
                                           children: [
-                                            Icon(Icons.access_time,
-                                                size: 16, color: Colors.black),
+                                            Icon(Icons.access_time, size: 16, color: Colors.black),
                                             SizedBox(width: 4),
                                             Text(
-                                              DateFormat.Hm().format(
-                                                  DateTime.parse(
-                                                      reminder['timetable'])),
+                                              DateFormat.Hm().format(DateTime.parse(reminder['timetable'])),
                                               style: TextStyle(fontSize: 14),
                                             ),
                                           ],
@@ -201,13 +214,13 @@ class _RemindersPageState extends State<RemindersPage> {
                                       Navigator.push(
                                         context,
                                         MaterialPageRoute(
-                                          builder: (context) =>
-                                              RemindersAddPage(
+                                          builder: (context) => RemindersAddPage(
                                             reminderId: reminder['id'].toString(),
                                             reminder: reminder['title'].toString(),
                                             details: reminder['description'],
                                             observations: reminder['observations'],
                                             time: TimeOfDay.fromDateTime(DateTime.parse(reminder['timetable'])),
+                                            reminders: reminders,
                                           ),
                                         ),
                                       );
@@ -225,7 +238,7 @@ class _RemindersPageState extends State<RemindersPage> {
         onPressed: () {
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => RemindersAddPage()),
+            MaterialPageRoute(builder: (context) => RemindersAddPage(reminders: reminders)),
           );
         },
         shape: CircleBorder(),
